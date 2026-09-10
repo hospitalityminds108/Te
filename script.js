@@ -1,66 +1,44 @@
-const progress = document.querySelector('.progress');
-const menu = document.querySelector('.menu-btn');
-const nav = document.querySelector('nav');
+// Mobile nav
+const menuToggle = document.getElementById('menuToggle');
+menuToggle?.addEventListener('click', () => {
+  const isOpen = document.body.classList.toggle('nav-open');
+  menuToggle.setAttribute('aria-expanded', String(isOpen));
+  menuToggle.innerHTML = isOpen
+    ? '<svg class="ic"><use href="#i-close"/></svg>'
+    : '<svg class="ic"><use href="#i-menu"/></svg>';
+});
+document.querySelectorAll('.main-nav a').forEach(a => {
+  a.addEventListener('click', () => {
+    document.body.classList.remove('nav-open');
+    menuToggle.setAttribute('aria-expanded', 'false');
+    menuToggle.innerHTML = '<svg class="ic"><use href="#i-menu"/></svg>';
+  });
+});
 
+// Header shadow on scroll
+const header = document.getElementById('siteHeader');
 window.addEventListener('scroll', () => {
-  const max = document.documentElement.scrollHeight - window.innerHeight;
-  progress.style.width = `${(window.scrollY / max) * 100}%`;
+  header.style.boxShadow = window.scrollY > 10 ? '0 8px 24px rgba(36,27,20,.08)' : 'none';
 });
 
-menu?.addEventListener('click', () => {
-  nav.classList.toggle('open');
-  nav.style.display = nav.classList.contains('open') ? 'flex' : '';
-  if(nav.classList.contains('open')){
-    nav.style.position='absolute';
-    nav.style.top='70px';
-    nav.style.left='0';
-    nav.style.right='0';
-    nav.style.padding='25px';
-    nav.style.background='var(--paper)';
-    nav.style.flexDirection='column';
-    nav.style.gap='18px';
-  }
-});
-
-document.querySelectorAll('.save').forEach(btn => {
-  btn.addEventListener('click', () => {
-    btn.textContent = btn.textContent === '♡' ? '♥' : '♡';
-  });
-});
-
-const counters = document.querySelectorAll('[data-count]');
-const observer = new IntersectionObserver(entries => {
+// One orchestrated reveal per section (not per-card)
+const revealTargets = document.querySelectorAll(
+  '.about, .leadership, .fundamentals, .poem, .projects, .redevelopment, .mumbai, .insights, .contact, .leader-bio, .leader-philosophy, .leader-quote'
+);
+revealTargets.forEach(el => el.classList.add('reveal'));
+const io = new IntersectionObserver((entries) => {
   entries.forEach(entry => {
-    if (!entry.isIntersecting) return;
-    const el = entry.target;
-    const target = Number(el.dataset.count);
-    let start = 0;
-    const duration = 1200;
-    const step = timestamp => {
-      if (!el.startTime) el.startTime = timestamp;
-      const progress = Math.min((timestamp - el.startTime) / duration, 1);
-      el.textContent = Math.floor(progress * target) + (target === 96 ? '%' : '+');
-      if(progress < 1) requestAnimationFrame(step);
-    };
-    requestAnimationFrame(step);
-    observer.unobserve(el);
-  });
-},{threshold:.4});
-counters.forEach(c => observer.observe(c));
-
-const reveal = new IntersectionObserver(entries => {
-  entries.forEach(entry => {
-    if(entry.isIntersecting){
-      entry.target.style.opacity='1';
-      entry.target.style.transform='translateY(0)';
-      reveal.unobserve(entry.target);
+    if (entry.isIntersecting) {
+      entry.target.classList.add('in');
+      io.unobserve(entry.target);
     }
   });
-},{threshold:.12});
+}, { threshold: 0.15 });
+revealTargets.forEach(el => io.observe(el));
 
-document.querySelectorAll('.property,.place,.journal article,.project-main,.intro>div').forEach(el=>{
-  el.style.opacity='0';
-  el.style.transform='translateY(25px)';
-  el.style.transition='opacity .7s ease, transform .7s ease';
-  reveal.observe(el);
+// Chatbot placeholder (wire up Sell.do widget here)
+document.querySelector('[data-chatbot]')?.addEventListener('click', (e) => {
+  e.preventDefault();
+  if (window.selldoChatOpen) { window.selldoChatOpen(); return; }
+  console.info('Sell.do chatbot: add the provided embed script and hook it up here.');
 });
